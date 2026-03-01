@@ -98,14 +98,9 @@
   <a class="button" href="https://umap.openstreetmap.fr/fr/map/ronchin-test_1366317" target="_blank">
     🗺️ Carte des IRIS
   </a>
- 
-  
-</main>
-<main>
- 
 <p><a href="naissances.html">Voir les naissances annuelles</a></p>
   
-</main>
+</main> 
 <h2>Ressources utiles</h2>
 
 <div class="accordion">
@@ -142,17 +137,30 @@
 
 </div>
 <script>
-document.querySelectorAll(".accordion-btn").forEach(button => {
-  button.addEventListener("click", () => {
-    const content = button.nextElementSibling;
+document.addEventListener("DOMContentLoaded", function() {
 
-    document.querySelectorAll(".accordion-content").forEach(c => {
-      if (c !== content) c.style.display = "none";
+  const buttons = document.querySelectorAll(".accordion-btn");
+
+  buttons.forEach(button => {
+    button.addEventListener("click", function() {
+      const content = this.nextElementSibling;
+
+      // Ferme les autres sections
+      document.querySelectorAll(".accordion-content").forEach(c => {
+        if (c !== content) {
+          c.style.display = "none";
+        }
+      });
+
+      // Toggle celle cliquée
+      if (content.style.display === "block") {
+        content.style.display = "none";
+      } else {
+        content.style.display = "block";
+      }
     });
-
-    content.style.display =
-      content.style.display === "block" ? "none" : "block";
   });
+
 });
 </script>
 </body>
