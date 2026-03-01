@@ -20,8 +20,8 @@ fetch('DS_ETAT_CIVIL_NAIS_COMMUNES.csv')
 
     rows.forEach(row => {
       const cols = row.split(';');
-      TIME_PERIOD.push(cols[0]);
-      OBS_VALUE.push(parseInt(cols[1]));
+      annees.push(cols[0].trim());
+      valeurs.push(parseInt(cols[1].trim()));
     });
 
     new Chart(document.getElementById('chart'), {
