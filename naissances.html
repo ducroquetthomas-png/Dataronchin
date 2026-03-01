@@ -3,13 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <title>Naissances annuelles</title>
+  <style>
+  .chart-container {
+    width: 50%;
+    max-width: 600px;
+    margin: 40px auto;
+  }
+</style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <h2>Naissances annuelles - Commune</h2>
-<canvas id="chart" width="400" height="200"></canvas>
-
+<div class="chart-container">
+  <canvas id="chart"></canvas>
+</div>
+  
 <script>
 fetch('DS_ETAT_CIVIL_NAIS_COMMUNES.csv')
   .then(response => response.text())
