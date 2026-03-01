@@ -27,9 +27,9 @@ fetch('DS_ETAT_CIVIL_NAIS_COMMUNES.csv')
     new Chart(document.getElementById('chart'), {
       type: 'line',
       data: {
-        labels: annees,
+        labels: TIME_PERIOD,
         datasets: [{
-          label: 'Naissances',
+          label: 'OBS_VALUE',
           data: valeurs,
           borderWidth: 2,
           tension: 0.2
