@@ -19,17 +19,17 @@ fetch('DS_ETAT_CIVIL_NAIS_COMMUNES.csv')
     const valeurs = [];
 
     rows.forEach(row => {
-      const cols = row.split(',');
-      annees.push(cols[0]);
-      valeurs.push(parseInt(cols[1]));
+      const cols = row.split(';');
+      TIME_PERIOD.push(cols[0]);
+      OBS_VALUE.push(parseInt(cols[1]));
     });
 
     new Chart(document.getElementById('chart'), {
       type: 'line',
       data: {
-        labels: TIME_PERIOD,
+        labels: annees,
         datasets: [{
-          label: 'OBS_VALUE',
+          label: 'Naissances',
           data: valeurs,
           borderWidth: 2,
           tension: 0.2
