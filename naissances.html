@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Naissances annuelles</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Naissances annuelles - Commune</h2>
+<canvas id="chart" width="800" height="400"></canvas>
+
+<script>
+fetch('DS_ETAT_CIVIL_NAIS_COMMUNES.csv')
+  .then(response => response.text())
+  .then(text => {
+    const rows = text.trim().split('\n').slice(1);
+    const annees = [];
+    const valeurs = [];
+
+    rows.forEach(row => {
+      const cols = row.split(',');
+      annees.push(cols[0]);
+      valeurs.push(parseInt(cols[1]));
+    });
+
+    new Chart(document.getElementById('chart'), {
+      type: 'line',
+      data: {
+        labels: annees,
+        datasets: [{
+          label: 'Naissances',
+          data: valeurs,
+          borderWidth: 2,
+          tension: 0.2
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
