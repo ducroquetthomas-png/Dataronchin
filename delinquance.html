@@ -3,25 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <title>Suivi délinquance</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  
-<style>
-body {
-  font-family: Arial, sans-serif;
-}
 
+<style>
 .charts-container {
   display: flex;
-  flex-wrap: wrap;
   gap: 20px;
 }
-
 .chart-box {
-  flex: 1 1 30%;
-  max-width: 32%;
+  flex: 1;
 }
-
 canvas {
   height: 300px !important;
 }
@@ -30,19 +23,17 @@ canvas {
 </head>
 <body>
 
-<h2>Suivi des indicateurs de délinquance</h2>
+<h2>Suivi des indicateurs</h2>
 
 <div class="charts-container">
   <div class="chart-box">
     <h3>Violences</h3>
     <canvas id="chart1"></canvas>
   </div>
-
   <div class="chart-box">
-    <h3>Atteintes aux biens</h3>
+    <h3>Biens</h3>
     <canvas id="chart2"></canvas>
   </div>
-
   <div class="chart-box">
     <h3>Stupéfiants</h3>
     <canvas id="chart3"></canvas>
@@ -50,103 +41,85 @@ canvas {
 </div>
 
 <script>
-Papa.parse('delinquance_202602.csv', {
+Papa.parse('delinquance-202602.csv', {
   download: true,
   header: true,
   complete: function(results) {
-    console.log(results.data);
-  }
-});
 
-  const rows = text.trim().split('\n').slice(1);
+    const rows = results.data;
+    const data = {};
 
-  const data = {};
+    rows.forEach(row => {
 
-  rows.forEach(row => {
-    const cols = row.split(',');
+      if (!row.annee) return;
+      if (row.est_diffuse === "ndiff") return;
 
-    const annee = cols[2];
-    const indicateur = cols[3];
-    const unite = cols[4];
-    const nombre = parseInt(cols[5]);
-    const est_diffuse = cols[7];
+      const indicateur = row.indicateur;
+      const annee = row.annee;
+      const nombre = parseInt(row.nombre);
 
-    if (est_diffuse === "ndiff") return;
-    if (!data[indicateur]) {
-      data[indicateur] = { unite: unite, valeurs: {} };
-    }
+      if (!data[indicateur]) {
+        data[indicateur] = {};
+      }
 
-    data[indicateur].valeurs[annee] = nombre;
-  });
+      data[indicateur][annee] = nombre;
+    });
 
-  const groupes = {
-    chart1: [
-      "Violences physiques intrafamiliales",
-      "Violences physiques hors cadre familial",
-      "Violences sexuelles"
-    ],
-    chart2: [
-      "Vols violents sans arme",
-      "Vols sans violence contre des personnes",
-      "Cambriolages de logement",
-      "Vols de véhicule",
-      "Vols dans les véhicules",
-      "Vols d'accessoires sur véhicules",
-      "Escroqueries et fraudes aux moyens de paiement",
-      "Vols avec armes",
-      "Destructions et dégradations volontaires"
-    ],
-    chart3: [
-      "Usage de stupéfiants",
-      "Usage de stupéfiants (AFD)",
-      "Trafic de stupéfiants"
-    ]
-  };
+    const groupes = {
+      chart1: [
+        "Violences physiques intrafamiliales",
+        "Violences physiques hors cadre familial",
+        "Violences sexuelles"
+      ],
+      chart2: [
+        "Vols violents sans arme",
+        "Vols sans violence contre des personnes",
+        "Cambriolages de logement"
+      ],
+      chart3: [
+        "Usage de stupéfiants",
+        "Usage de stupéfiants (AFD)",
+        "Trafic de stupéfiants"
+      ]
+    };
 
-  function createChart(canvasId, indicateurs) {
+    const annees = [...new Set(rows.map(r => r.annee))]
+      .filter(Boolean)
+      .sort();
 
-    const annees = [...new Set(
-      Object.values(data)
-        .flatMap(d => Object.keys(d.valeurs))
-    )].sort();
+    function createChart(canvasId, indicateurs) {
 
-    const datasets = indicateurs.map(ind => {
-      if (!data[ind]) return null;
+      const datasets = indicateurs.map(ind => {
+        if (!data[ind]) return null;
 
-      return {
-        label: ind,
-        data: annees.map(a => data[ind].valeurs[a] || null),
-        borderWidth: 2,
-        tension: 0.2
-      };
-    }).filter(Boolean);
+        return {
+          label: ind,
+          data: annees.map(a => data[ind][a] || null),
+          tension: 0.2,
+          borderWidth: 2
+        };
+      }).filter(Boolean);
 
-    new Chart(document.getElementById(canvasId), {
-      type: 'line',
-      data: {
-        labels: annees,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
+      new Chart(document.getElementById(canvasId), {
+        type: 'line',
+        data: {
+          labels: annees,
+          datasets: datasets
         },
-        scales: {
-          y: {
-            beginAtZero: true
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
           }
         }
-      }
-    });
+      });
+    }
+
+    createChart("chart1", groupes.chart1);
+    createChart("chart2", groupes.chart2);
+    createChart("chart3", groupes.chart3);
+
   }
-
-  createChart("chart1", groupes.chart1);
-  createChart("chart2", groupes.chart2);
-  createChart("chart3", groupes.chart3);
-
 });
 </script>
 
