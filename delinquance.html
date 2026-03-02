@@ -1,0 +1,87 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="chartDelinquance"></canvas>
+
+<script>
+fetch('delinquance_202602.csv')
+  .then(response => response.text())
+  .then(text => {
+
+    const rows = text.trim().split('\n');
+    const header = rows[0].split(',');
+
+    const idxAnnee = header.indexOf("annee");
+    const idxInd = header.indexOf("indicateur");
+    const idxNombre = header.indexOf("nombre");
+    const idxDiffuse = header.indexOf("est_diffuse");
+    const idxUnite = header.indexOf("unite_de_compte");
+
+    const data = [];
+    const indicateurs = new Set();
+    const annees = new Set();
+    const uniteParIndicateur = {};
+
+    rows.slice(1).forEach(row => {
+      const cols = row.split(',');
+
+      if (cols[idxDiffuse] === "ndiff") return; // on ignore
+
+      const annee = cols[idxAnnee];
+      const indicateur = cols[idxInd];
+      const nombre = parseFloat(cols[idxNombre]);
+      const unite = cols[idxUnite];
+
+      indicateurs.add(indicateur);
+      annees.add(annee);
+
+      uniteParIndicateur[indicateur] = unite;
+
+      data.push({ annee, indicateur, nombre });
+    });
+
+    const anneesTriees = Array.from(annees).sort();
+    const indicateursArray = Array.from(indicateurs);
+
+    const datasets = indicateursArray.map(ind => {
+      return {
+        label: ind,
+        data: anneesTriees.map(a => {
+          const ligne = data.find(d => d.annee === a && d.indicateur === ind);
+          return ligne ? ligne.nombre : null;
+        }),
+        borderWidth: 2,
+        tension: 0.2
+      };
+    });
+
+    new Chart(document.getElementById('chartDelinquance'), {
+      type: 'line',
+      data: {
+        labels: anneesTriees,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Affichage des unités sous le graphique
+    const infoDiv = document.createElement("div");
+    infoDiv.style.marginTop = "20px";
+    infoDiv.innerHTML = "<strong>Unités observées :</strong><br>" +
+      Object.entries(uniteParIndicateur)
+        .map(([ind, unite]) => ind + " : " + unite)
+        .join("<br>");
+
+    document.getElementById("chartDelinquance").after(infoDiv);
+
+  });
+</script>
