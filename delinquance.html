@@ -1,127 +1,64 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Suivi délinquance</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
-<style>
-.charts-container {
-  display: flex;
-  gap: 20px;
-}
-.chart-box {
-  flex: 1;
-}
-canvas {
-  height: 300px !important;
-}
-</style>
-
-</head>
-<body>
-
-<h2>Suivi des indicateurs</h2>
-
-<div class="charts-container">
-  <div class="chart-box">
-    <h3>Violences</h3>
-    <canvas id="chart1"></canvas>
-  </div>
-  <div class="chart-box">
-    <h3>Biens</h3>
-    <canvas id="chart2"></canvas>
-  </div>
-  <div class="chart-box">
-    <h3>Stupéfiants</h3>
-    <canvas id="chart3"></canvas>
-  </div>
-</div>
-
 <script>
-Papa.parse('delinquance-202602.csv', {
-  download: true,
-  header: true,
-  complete: function(results) {
+fetch('delinquance_202602.csv')
+  .then(response => response.text())
+  .then(text => {
 
-    const rows = results.data;
-    const data = {};
+    const rows = text.trim().split('\n');
+    const header = rows[0].split(',');
 
-    rows.forEach(row => {
+    const idxAnnee = header.indexOf("annee");
+    const idxInd = header.indexOf("indicateur");
+    const idxNombre = header.indexOf("nombre");
+    const idxDiffuse = header.indexOf("est_diffuse");
+    const idxUnite = header.indexOf("unite_de_compte");
 
-      if (!row.annee) return;
-      if (row.est_diffuse === "ndiff") return;
+    const annees = [];
+    const valeurs = [];
+    let unite = "";
 
-      const indicateur = row.indicateur;
-      const annee = row.annee;
-      const nombre = parseInt(row.nombre);
+    rows.slice(1).forEach(row => {
 
-      if (!data[indicateur]) {
-        data[indicateur] = {};
-      }
+      const cols = row.split(',').map(c =>
+        c.trim().replace(/^"|"$/g, '')
+      );
 
-      data[indicateur][annee] = nombre;
+      if (cols[idxDiffuse] === "ndiff") return;
+
+      const indicateur = cols[idxInd];
+
+      if (indicateur !== "Cambriolages de logement") return;
+
+      annees.push(cols[idxAnnee]);
+      valeurs.push(parseFloat(cols[idxNombre]));
+      unite = cols[idxUnite];
     });
 
-    const groupes = {
-      chart1: [
-        "Violences physiques intrafamiliales",
-        "Violences physiques hors cadre familial",
-        "Violences sexuelles"
-      ],
-      chart2: [
-        "Vols violents sans arme",
-        "Vols sans violence contre des personnes",
-        "Cambriolages de logement"
-      ],
-      chart3: [
-        "Usage de stupéfiants",
-        "Usage de stupéfiants (AFD)",
-        "Trafic de stupéfiants"
-      ]
-    };
-
-    const annees = [...new Set(rows.map(r => r.annee))]
-      .filter(Boolean)
-      .sort();
-
-    function createChart(canvasId, indicateurs) {
-
-      const datasets = indicateurs.map(ind => {
-        if (!data[ind]) return null;
-
-        return {
-          label: ind,
-          data: annees.map(a => data[ind][a] || null),
-          tension: 0.2,
-          borderWidth: 2
-        };
-      }).filter(Boolean);
-
-      new Chart(document.getElementById(canvasId), {
-        type: 'line',
-        data: {
-          labels: annees,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true }
-          }
+    new Chart(document.getElementById('chartDelinquance'), {
+      type: 'line',
+      data: {
+        labels: annees,
+        datasets: [{
+          label: "Cambriolages de logement",
+          data: valeurs,
+          borderWidth: 2,
+          tension: 0.2
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
         }
-      });
-    }
+      }
+    });
 
-    createChart("chart1", groupes.chart1);
-    createChart("chart2", groupes.chart2);
-    createChart("chart3", groupes.chart3);
+    // Affichage unité
+    const infoDiv = document.createElement("div");
+    infoDiv.style.marginTop = "15px";
+    infoDiv.innerHTML =
+      "<strong>Unité observée :</strong> " + unite;
 
-  }
-});
+    document.getElementById("chartDelinquance").after(infoDiv);
+
+  });
 </script>
-
-</body>
-</html>
