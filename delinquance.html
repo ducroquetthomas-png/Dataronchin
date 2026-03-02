@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <title>Suivi délinquance</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -49,9 +50,13 @@ canvas {
 </div>
 
 <script>
-fetch('delinquance_202602.csv')
-.then(response => response.text())
-.then(text => {
+Papa.parse('delinquance_202602.csv', {
+  download: true,
+  header: true,
+  complete: function(results) {
+    console.log(results.data);
+  }
+});
 
   const rows = text.trim().split('\n').slice(1);
 
