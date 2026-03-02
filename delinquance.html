@@ -1,69 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Suivi délinquance</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<canvas id="chartDelinquance"></canvas>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+}
+
+.charts-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-box {
+  flex: 1 1 30%;
+  max-width: 32%;
+}
+
+canvas {
+  height: 300px !important;
+}
+</style>
+
+</head>
+<body>
+
+<h2>Suivi des indicateurs de délinquance</h2>
+
+<div class="charts-container">
+  <div class="chart-box">
+    <h3>Violences</h3>
+    <canvas id="chart1"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Atteintes aux biens</h3>
+    <canvas id="chart2"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <h3>Stupéfiants</h3>
+    <canvas id="chart3"></canvas>
+  </div>
+</div>
 
 <script>
 fetch('delinquance_202602.csv')
-  .then(response => response.text())
-  .then(text => {
+.then(response => response.text())
+.then(text => {
 
-    const rows = text.trim().split('\n');
-    const header = rows[0].split(',');
+  const rows = text.trim().split('\n').slice(1);
 
-    const idxAnnee = header.indexOf("annee");
-    const idxInd = header.indexOf("indicateur");
-    const idxNombre = header.indexOf("nombre");
-    const idxDiffuse = header.indexOf("est_diffuse");
-    const idxUnite = header.indexOf("unite_de_compte");
+  const data = {};
 
-    const data = [];
-    const indicateurs = new Set();
-    const annees = new Set();
-    const uniteParIndicateur = {};
+  rows.forEach(row => {
+    const cols = row.split(',');
 
-    rows.slice(1).forEach(row => {
-      const cols = row.split(',');
+    const annee = cols[2];
+    const indicateur = cols[3];
+    const unite = cols[4];
+    const nombre = parseInt(cols[5]);
+    const est_diffuse = cols[7];
 
-      if (cols[idxDiffuse] === "ndiff") return; // on ignore
+    if (est_diffuse === "ndiff") return;
+    if (!data[indicateur]) {
+      data[indicateur] = { unite: unite, valeurs: {} };
+    }
 
-      const annee = cols[idxAnnee];
-      const indicateur = cols[idxInd];
-      const nombre = parseFloat(cols[idxNombre]);
-      const unite = cols[idxUnite];
+    data[indicateur].valeurs[annee] = nombre;
+  });
 
-      indicateurs.add(indicateur);
-      annees.add(annee);
+  const groupes = {
+    chart1: [
+      "Violences physiques intrafamiliales",
+      "Violences physiques hors cadre familial",
+      "Violences sexuelles"
+    ],
+    chart2: [
+      "Vols violents sans arme",
+      "Vols sans violence contre des personnes",
+      "Cambriolages de logement",
+      "Vols de véhicule",
+      "Vols dans les véhicules",
+      "Vols d'accessoires sur véhicules",
+      "Escroqueries et fraudes aux moyens de paiement",
+      "Vols avec armes",
+      "Destructions et dégradations volontaires"
+    ],
+    chart3: [
+      "Usage de stupéfiants",
+      "Usage de stupéfiants (AFD)",
+      "Trafic de stupéfiants"
+    ]
+  };
 
-      uniteParIndicateur[indicateur] = unite;
+  function createChart(canvasId, indicateurs) {
 
-      data.push({ annee, indicateur, nombre });
-    });
+    const annees = [...new Set(
+      Object.values(data)
+        .flatMap(d => Object.keys(d.valeurs))
+    )].sort();
 
-    const anneesTriees = Array.from(annees).sort();
-    const indicateursArray = Array.from(indicateurs);
+    const datasets = indicateurs.map(ind => {
+      if (!data[ind]) return null;
 
-    const datasets = indicateursArray.map(ind => {
       return {
         label: ind,
-        data: anneesTriees.map(a => {
-          const ligne = data.find(d => d.annee === a && d.indicateur === ind);
-          return ligne ? ligne.nombre : null;
-        }),
+        data: annees.map(a => data[ind].valeurs[a] || null),
         borderWidth: 2,
         tension: 0.2
       };
-    });
+    }).filter(Boolean);
 
-    new Chart(document.getElementById('chartDelinquance'), {
+    new Chart(document.getElementById(canvasId), {
       type: 'line',
       data: {
-        labels: anneesTriees,
+        labels: annees,
         datasets: datasets
       },
       options: {
         responsive: true,
-        interaction: {
-          mode: 'index',
-          intersect: false
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
         },
         scales: {
           y: {
@@ -72,16 +136,14 @@ fetch('delinquance_202602.csv')
         }
       }
     });
+  }
 
-    // Affichage des unités sous le graphique
-    const infoDiv = document.createElement("div");
-    infoDiv.style.marginTop = "20px";
-    infoDiv.innerHTML = "<strong>Unités observées :</strong><br>" +
-      Object.entries(uniteParIndicateur)
-        .map(([ind, unite]) => ind + " : " + unite)
-        .join("<br>");
+  createChart("chart1", groupes.chart1);
+  createChart("chart2", groupes.chart2);
+  createChart("chart3", groupes.chart3);
 
-    document.getElementById("chartDelinquance").after(infoDiv);
-
-  });
+});
 </script>
+
+</body>
+</html>
