@@ -1,15 +1,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<canvas id="chartDelinquance"></canvas>
-
 <style>
 .chart-container {
-  width: 45%;
+  width: 40%;        /* environ 1/4 à 1/3 écran */
   max-width: 600px;
   height: 300px;
 }
 
-#chartDelinquance {
+.chart-container canvas {
+  width: 100% !important;
   height: 100% !important;
 }
 </style>
@@ -17,7 +16,6 @@
 <div class="chart-container">
   <canvas id="chartDelinquance"></canvas>
 </div>
-
 
 <script>
 fetch('delinquance_202602.csv')
