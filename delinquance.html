@@ -21,19 +21,20 @@ fetch('delinquance_202602.csv')
       const cols = row.split(',').map(c =>
         c.trim().replace(/^"|"$/g, '')
       );
-console.log("Années:", annees);
-console.log("Valeurs:", valeurs);
       if (cols[idxDiffuse] === "ndiff") return;
 
-      const indicateur = cols[idxInd];
+      const indicateur = cols[idxInd].replace(/"/g, '').trim();
 
-      if (indicateur !== "Cambriolages de logement") return;
+      if (!indicateur.includes("Cambriolages de logement")) return;
 
       annees.push(cols[idxAnnee]);
       valeurs.push(parseFloat(cols[idxNombre]));
       unite = cols[idxUnite];
     });
 
+console.log("Années:", annees);
+console.log("Valeurs:", valeurs);
+    
     new Chart(document.getElementById('chartDelinquance'), {
       type: 'line',
       data: {
