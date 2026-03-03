@@ -10,6 +10,7 @@
 
 </style>
 <div id="filters" style="margin-bottom:15px;"></div>
+
 <div class="chart-container">
   <canvas id="chartDelinquance"></canvas>
 </div>
@@ -82,31 +83,63 @@ fetch('delinquance_202602.csv')
 
     }).filter(Boolean);
 
-    new Chart(document.getElementById('chartDelinquance'), {
-      type: 'line',
-      data: {
-        labels: annees,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
+const chart = new Chart(document.getElementById('chartDelinquance'), {
+  type: 'line',
+  data: {
+    labels: annees,
+    datasets: datasets
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      legend: {
+        display: false  // on remplace par nos filtres
       }
-    });
+    },
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    },
+    onHover: (event, elements) => {
+      if (elements.length) {
+        const datasetIndex = elements[0].datasetIndex;
 
+        chart.data.datasets.forEach((ds, i) => {
+          ds.borderWidth = i === datasetIndex ? 4 : 1;
+          ds.borderColor = i === datasetIndex ? ds.borderColor : '#cccccc';
+        });
+
+        chart.update('none');
+      }
+    }
+  }
+});
+ 
+const filtersDiv = document.getElementById("filters");
+
+chart.data.datasets.forEach((dataset, index) => {
+
+  const label = document.createElement("label");
+  label.style.marginRight = "15px";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = true;
+
+  checkbox.addEventListener("change", () => {
+    chart.setDatasetVisibility(index, checkbox.checked);
+    chart.update();
   });
+
+  label.appendChild(checkbox);
+  label.append(" " + dataset.label);
+
+  filtersDiv.appendChild(label);
+});
 </script>
