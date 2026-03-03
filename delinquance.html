@@ -21,7 +21,8 @@ fetch('delinquance_202602.csv')
       const cols = row.split(',').map(c =>
         c.trim().replace(/^"|"$/g, '')
       );
-
+console.log("Années:", annees);
+console.log("Valeurs:", valeurs);
       if (cols[idxDiffuse] === "ndiff") return;
 
       const indicateur = cols[idxInd];
