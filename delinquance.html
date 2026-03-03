@@ -31,57 +31,87 @@ fetch('delinquance_202602.csv')
     const idxInd = header.indexOf("indicateur");
     const idxNombre = header.indexOf("nombre");
     const idxDiffuse = header.indexOf("est_diffuse");
-    const idxUnite = header.indexOf("unite_de_compte");
 
-    const annees = [];
-    const valeurs = [];
-    let unite = "";
+    const categories = [
+      "Cambriolages de logement",
+      "Vols violents sans arme",
+      "Vols sans violence contre des personnes",
+      "Vols de véhicule",
+      "Vols dans les véhicules",
+      "Vols d'accessoires sur véhicules",
+      "Escroqueries et fraudes aux moyens de paiement",
+      "Vols avec armes",
+      "Destructions et dégradations volontaires"
+    ];
+
+    const dataParIndicateur = {};
+    const anneesSet = new Set();
 
     rows.slice(1).forEach(row => {
 
       const cols = row.split(',').map(c =>
         c.trim().replace(/^"|"$/g, '')
       );
+
       if (cols[idxDiffuse] === "ndiff") return;
 
-      const indicateur = cols[idxInd].replace(/"/g, '').trim();
+      const indicateur = cols[idxInd];
+      const annee = cols[idxAnnee];
+      const nombre = parseFloat(cols[idxNombre]);
 
-      if (!indicateur.includes("Cambriolages de logement")) return;
+      if (!categories.includes(indicateur)) return;
 
-      annees.push(cols[idxAnnee]);
-      valeurs.push(parseFloat(cols[idxNombre]));
-      unite = cols[idxUnite];
+      anneesSet.add(annee);
+
+      if (!dataParIndicateur[indicateur]) {
+        dataParIndicateur[indicateur] = {};
+      }
+
+      dataParIndicateur[indicateur][annee] = nombre;
     });
 
-console.log("Années:", annees);
-console.log("Valeurs:", valeurs);
-    
+    const annees = Array.from(anneesSet).sort();
+
+    const datasets = categories.map(cat => {
+
+      if (!dataParIndicateur[cat]) return null;
+
+      return {
+        label: cat,
+        data: annees.map(a =>
+          dataParIndicateur[cat][a] ?? null
+        ),
+        borderWidth: 2,
+        tension: 0.2
+      };
+
+    }).filter(Boolean);
+
     new Chart(document.getElementById('chartDelinquance'), {
       type: 'line',
       data: {
         labels: annees,
-        datasets: [{
-          label: "Cambriolages de logement",
-          data: valeurs,
-          borderWidth: 2,
-          tension: 0.2
-        }]
+        datasets: datasets
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        },
         scales: {
-          y: { beginAtZero: true }
+          y: {
+            beginAtZero: true
+          }
         }
       }
     });
-
-    // Affichage unité
-    const infoDiv = document.createElement("div");
-    infoDiv.style.marginTop = "15px";
-    infoDiv.innerHTML =
-      "<strong>Unité observée :</strong> " + unite;
-
-    document.getElementById("chartDelinquance").after(infoDiv);
 
   });
 </script>
