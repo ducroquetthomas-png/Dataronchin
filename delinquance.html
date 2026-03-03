@@ -106,17 +106,31 @@ const chart = new Chart(document.getElementById('chartDelinquance'), {
         beginAtZero: true
       }
     },
-    onHover: (event, elements) => {
-      if (elements.length) {
-        const datasetIndex = elements[0].datasetIndex;
+onHover: (event, elements) => {
 
-        chart.data.datasets.forEach((ds, i) => {
-          ds.borderWidth = i === datasetIndex ? 4 : 1;
-          ds.borderColor = i === datasetIndex ? ds.borderColor : '#cccccc';
-        });
+  if (elements.length) {
+    const datasetIndex = elements[0].datasetIndex;
 
-        chart.update('none');
+    chart.data.datasets.forEach((ds, i) => {
+      if (i === datasetIndex) {
+        ds.borderWidth = 4;
+        ds.borderColor = ds.originalColor;
+      } else {
+        ds.borderWidth = 1;
+        ds.borderColor = '#dddddd';
       }
+    });
+
+  } else {
+    // reset quand on sort du graphique
+    chart.data.datasets.forEach(ds => {
+      ds.borderWidth = 2;
+      ds.borderColor = ds.originalColor;
+    });
+  }
+
+  chart.update('none');
+}
     }
   }
 });
